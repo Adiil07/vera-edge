@@ -1,0 +1,95 @@
+[
+  {
+    "identity": {
+      "id": "m_001_drmeera",
+      "name": "Dr. Meera Sharma",
+      "business_name": "Smile Care Dental Clinic",
+      "category": "dentists",
+      "location": "Hauz Khas, South Delhi",
+      "years_on_platform": 2
+    },
+    "performance": {
+      "ctr": 2.1,
+      "peer_median_ctr": 3.0,
+      "rating": 4.2,
+      "review_count": 67,
+      "monthly_leads": 34,
+      "conversion_rate": 0.41,
+      "top_searched_service": "Dental Check Up"
+    },
+    "offers": [
+      {"name": "Dental Cleaning", "price": 299, "views": 145, "conversions": 28},
+      {"name": "Teeth Whitening", "price": 1499, "views": 89, "conversions": 9},
+      {"name": "Root Canal", "price": 3500, "views": 34, "conversions": 5}
+    ],
+    "conversation_history": [],
+    "signals": {
+      "last_review_reply_hours": 18,
+      "menu_photos": 4,
+      "listing_completeness": 0.72
+    }
+  },
+  {
+    "identity": {
+      "id": "m_002_ramesh",
+      "name": "Ramesh Kumar",
+      "business_name": "Ramesh Dhaba",
+      "category": "restaurants",
+      "location": "Lajpat Nagar, South Delhi",
+      "years_on_platform": 3
+    },
+    "performance": {
+      "ctr": 2.8,
+      "peer_median_ctr": 3.2,
+      "rating": 4.1,
+      "review_count": 89,
+      "monthly_orders": 847,
+      "avg_order_value": 380,
+      "top_viewed_item": "Butter Chicken"
+    },
+    "offers": [
+      {"name": "Butter Chicken", "price": 320, "views": 234, "conversions": 54, "view_to_order": 0.23},
+      {"name": "Dal Makhani", "price": 180, "views": 189, "conversions": 76, "view_to_order": 0.40},
+      {"name": "Paneer Tikka", "price": 280, "views": 156, "conversions": 48, "view_to_order": 0.31}
+    ],
+    "conversation_history": [],
+    "signals": {
+      "last_review_reply_hours": 24,
+      "menu_photos": 6,
+      "competitor_rating": 4.6,
+      "peak_hours": "13:00-15:00",
+      "listing_completeness": 0.68
+    }
+  },
+  {
+    "identity": {
+      "id": "m_003_priya",
+      "name": "Priya Malhotra",
+      "business_name": "Glamour Studio Salon",
+      "category": "salons",
+      "location": "Punjabi Bagh, West Delhi",
+      "years_on_platform": 1
+    },
+    "performance": {
+      "ctr": 3.1,
+      "peer_median_ctr": 3.5,
+      "rating": 4.4,
+      "review_count": 43,
+      "monthly_bookings": 128,
+      "avg_booking_value": 650,
+      "top_service": "Bridal Makeup"
+    },
+    "offers": [
+      {"name": "Bridal Package", "price": 8500, "views": 78, "conversions": 12},
+      {"name": "Hair Spa", "price": 799, "views": 145, "conversions": 67},
+      {"name": "Facial", "price": 599, "views": 112, "conversions": 45}
+    ],
+    "conversation_history": [],
+    "signals": {
+      "wedding_season_weeks_away": 3,
+      "last_review_reply_hours": 6,
+      "menu_photos": 12,
+      "listing_completeness": 0.85
+    }
+  }
+]

@@ -1,0 +1,64 @@
+{
+  "categories": {
+    "restaurants": {
+      "name": "Restaurants",
+      "tone": "warm, appetite-driven, urgent",
+      "peak_triggers": ["lunch_rush", "dinner_spike", "weekend", "ipl_match", "festival"],
+      "avoid": ["medical claims", "price comparisons without data"],
+      "offer_patterns": ["combo deals", "happy hour", "delivery discount", "bulk order"],
+      "benchmark_ctr": 3.2,
+      "benchmark_rating": 4.3,
+      "benchmark_review_count": 150,
+      "message_style": "Start with demand signal. Use food imagery words. End with one-tap offer launch.",
+      "example_hook": "190 people in your area are searching for biryani right now."
+    },
+    "dentists": {
+      "name": "Dentists",
+      "tone": "clinical, trust-first, reassuring",
+      "peak_triggers": ["research_digest", "recall_reminder", "seasonal_checkup", "lapse_patient"],
+      "avoid": ["hype language", "urgency pressure", "unverified claims"],
+      "offer_patterns": ["checkup package", "cleaning discount", "family plan", "first visit offer"],
+      "benchmark_ctr": 2.8,
+      "benchmark_rating": 4.5,
+      "benchmark_review_count": 80,
+      "message_style": "Lead with local search data. Build trust. Offer clear next step.",
+      "example_hook": "190 people in your locality are searching for dental checkups."
+    },
+    "salons": {
+      "name": "Salons",
+      "tone": "aspirational, visual, friendly",
+      "peak_triggers": ["wedding_season", "festival_prep", "weekend_spike", "lapse_customer"],
+      "avoid": ["clinical language", "overly formal tone"],
+      "offer_patterns": ["bridal package", "combo treatment", "loyalty offer", "referral discount"],
+      "benchmark_ctr": 3.5,
+      "benchmark_rating": 4.4,
+      "benchmark_review_count": 120,
+      "message_style": "Lead with occasion or trend. Use transformation language. End with booking CTA.",
+      "example_hook": "Wedding season is 3 weeks away. 85 brides searched salons in your area today."
+    },
+    "gyms": {
+      "name": "Gyms",
+      "tone": "energetic, motivational, results-focused",
+      "peak_triggers": ["new_year", "summer_body", "seasonal_dip", "membership_lapse"],
+      "avoid": ["shame language", "unrealistic claims"],
+      "offer_patterns": ["trial membership", "seasonal offer", "buddy pass", "transformation challenge"],
+      "benchmark_ctr": 2.9,
+      "benchmark_rating": 4.2,
+      "benchmark_review_count": 95,
+      "message_style": "Lead with results or urgency. Use active verbs. Make the ask feel easy.",
+      "example_hook": "Summer is 6 weeks away. 40 people in your area are searching for gyms this week."
+    },
+    "pharmacies": {
+      "name": "Pharmacies",
+      "tone": "reliable, compliance-first, caring",
+      "peak_triggers": ["refill_reminder", "seasonal_health", "compliance_alert", "new_prescription"],
+      "avoid": ["sales pressure", "medical advice", "unverified health claims"],
+      "offer_patterns": ["refill reminder", "health package", "home delivery", "chronic care"],
+      "benchmark_ctr": 2.5,
+      "benchmark_rating": 4.6,
+      "benchmark_review_count": 60,
+      "message_style": "Lead with care signal. Keep it simple. One compliance or convenience action.",
+      "example_hook": "3 of your regular customers are due for refills this week."
+    }
+  }
+}

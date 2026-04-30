@@ -1,0 +1,73 @@
+[
+  {
+    "id": "trg_research_digest_dentists",
+    "type": "research_digest",
+    "category": "dentists",
+    "signal": "190 people in locality searching for Dental Check Up",
+    "search_volume": 190,
+    "trend": "spike",
+    "locality": "South Delhi",
+    "urgency": "high",
+    "recommended_action": "targeted_offer"
+  },
+  {
+    "id": "trg_ipl_final_restaurants",
+    "type": "event",
+    "category": "restaurants",
+    "signal": "IPL Final this Saturday — high group order demand expected",
+    "expected_demand_multiplier": 2.3,
+    "trend": "spike",
+    "urgency": "high",
+    "recommended_action": "group_combo_offer"
+  },
+  {
+    "id": "trg_competitor_rating_gap",
+    "type": "competitive",
+    "category": "restaurants",
+    "signal": "Top competitor has 4.6 stars vs merchant 4.1 stars",
+    "gap": 0.5,
+    "trend": "dip",
+    "urgency": "medium",
+    "recommended_action": "review_drive"
+  },
+  {
+    "id": "trg_seasonal_wedding_salons",
+    "type": "seasonal",
+    "category": "salons",
+    "signal": "Wedding season peak in 3 weeks — bridal bookings surging",
+    "season_weeks_remaining": 3,
+    "trend": "spike",
+    "urgency": "high",
+    "recommended_action": "bridal_package_push"
+  },
+  {
+    "id": "trg_lapse_customer_gym",
+    "type": "recall",
+    "category": "gyms",
+    "signal": "Customer inactive for 21 days — at risk of churn",
+    "inactive_days": 21,
+    "trend": "dip",
+    "urgency": "medium",
+    "recommended_action": "winback_offer"
+  },
+  {
+    "id": "trg_low_ctr_merchant",
+    "type": "performance_dip",
+    "category": "general",
+    "signal": "Merchant CTR 30% below peer median this week",
+    "ctr_gap": 0.9,
+    "trend": "dip",
+    "urgency": "medium",
+    "recommended_action": "listing_optimization"
+  },
+  {
+    "id": "trg_refill_reminder_pharmacy",
+    "type": "compliance",
+    "category": "pharmacies",
+    "signal": "3 chronic patients due for monthly refill",
+    "patients_count": 3,
+    "trend": "scheduled",
+    "urgency": "high",
+    "recommended_action": "refill_outreach"
+  }
+]
