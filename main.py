@@ -1,24 +1,15 @@
 """
-VERA EDGE — main.py (v2.2 — Competition Grade)
+VERA EDGE — main.py (v2.3 — Competition Grade)
 magicpin AI Challenge: Build Vera Better
 
 Author: Adil (MBA 2024-26, AMU)
 Model: llama-3.3-70b-versatile (Groq Free)
 
-ALL GAPS FIXED:
-  GAP 1 ✅ — /v1/tick returns full schema
-  GAP 2 ✅ — /v1/reply validates action ∈ {send, wait, end}
-  GAP 3 ✅ — Adaptive context on every tick/reply
-  GAP 4 ✅ — Trigger-specific composition logic (8 trigger kinds)
-  GAP 5 ✅ — Conversation state machine: qualify → action → exit
-  GAP 6 ✅ — Hindi-English code-mix for hi merchants
-  GAP 7 ✅ — Category vocab/taboo enforcement
-  BONUS ✅ — Hardened fallbacks: never returns empty actions
-  BONUS ✅ — 8 trigger kinds with smart fallback messages
-  BONUS ✅ — Correct template naming per trigger kind
+ALL GAPS FIXED + SCORING OPTIMIZATIONS
 """
 
 import os
+import re
 import time
 import json
 import uuid
@@ -31,7 +22,7 @@ from groq import Groq
 # ─────────────────────────────────────────────
 # APP SETUP
 # ─────────────────────────────────────────────
-app = FastAPI(title="Vera Edge v2.2")
+app = FastAPI(title="Vera Edge v2.3")
 START_TIME = time.time()
 
 CONTEXT_STORE: Dict[str, Dict] = {}
@@ -93,7 +84,7 @@ You are VERA EDGE - Vera, magicpin's merchant WhatsApp AI, built to score 8+/10.
 
 ## OUTPUT FORMAT (EXACT JSON):
 {{
-  "body": "<message>",
+  "body": "<message starting with trigger reason or metric>",
   "cta": "<open_ended|yes_no|binary_action|none>",
   "send_as": "<vera|merchant_on_behalf>",
   "suppression_key": "<key>",
@@ -169,7 +160,6 @@ Performance (30d): views={perf.get('views')} calls={perf.get('calls')} ctr={perf
 CTR gap vs peer: merchant={perf.get('ctr')} peer_median={peer_stats.get('avg_ctr')}
 Signals: {signals}
 Active offers: {json.dumps([o for o in offers if o.get('status') == 'active'], ensure_ascii=False)}
-Customer aggregate: {json.dumps(cust_agg if 'cust_agg' in dir() else {}, ensure_ascii=False)}
 Review themes: {json.dumps(review_themes, ensure_ascii=False)}
 
 === CATEGORY: {cat_slug} ===
@@ -202,7 +192,7 @@ Owner to address: {owner_name}
 {send_as_instruction}
 
 CRITICAL RULES:
-- FIRST WORD MUST be one of: "Your", "Patients", "New", "A", "CTR", "Footfall", "Subscriptions", "Calls", "Reviews", "Bookings". NEVER start with a name or greeting.
+- FIRST WORD MUST be one of: "Your", "Patients", "New", "A", "CTR", "Footfall", "Subscriptions", "Calls", "Reviews", "Bookings", "The". NEVER start with a name or greeting.
 - Use EXACT numbers from context: CTR, peer median, days left, prices.
 - Match category voice precisely. Never use taboo words.
 - End with ONE binary CTA (yes/no).
@@ -210,7 +200,7 @@ CRITICAL RULES:
 
 Return ONLY valid JSON (no markdown):
 {{
-  "body": "<message starting with trigger reason>",
+  "body": "<message>",
   "cta": "<yes_no|open_ended|none>",
   "send_as": "<vera|merchant_on_behalf>",
   "suppression_key": "{trigger.get('suppression_key', f'vera:{merchant_id}:tick')}",
@@ -222,7 +212,7 @@ Return ONLY valid JSON (no markdown):
 
 
 # ─────────────────────────────────────────────
-# COMPOSE ONE — With Smart Fallbacks
+# COMPOSE ONE — With Smart Fallbacks + Greeting Stripper
 # ─────────────────────────────────────────────
 def compose_one(
     category: Dict,
@@ -258,8 +248,25 @@ def compose_one(
 
         result = json.loads(raw)
 
+        # Hard cap body at 320 characters
         if result.get("body"):
             result["body"] = result["body"][:320]
+
+        # FORCE strip greeting prefix from body
+        if result.get("body"):
+            body = result["body"]
+            # Remove common greeting patterns
+            body = re.sub(r'^(Dr\.\s*\w+,?\s*)', '', body)
+            body = re.sub(r'^(Dr\.\s*\w+\s+\w+,?\s*)', '', body)
+            body = re.sub(r'^(Hi\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
+            body = re.sub(r'^(Hello\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
+            body = re.sub(r'^(Namaste\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
+            body = re.sub(r'^(Dear\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
+            body = re.sub(r'^(\w+\s+sir,?\s*)', '', body, flags=re.IGNORECASE)
+            body = body.strip()
+            if body:
+                result["body"] = body[:320]
+
         if not result.get("body", "").strip():
             return None
 
@@ -280,31 +287,31 @@ def compose_one(
 
         # Trigger-specific fallback messages
         if trigger_kind == "performance_alert":
-            body = f"{owner}, your CTR is below peer average. Want to see how to improve?" if owner else "Your performance is below peer average. Want to improve?"
+            body = f"Your CTR is below peer average. Want to see how to improve?" if owner else "Your performance is below peer average. Want to improve?"
             template = "vera_performance_alert_v2"
         elif trigger_kind == "research_digest":
-            body = f"{owner}, new research for your category just arrived. Want the key insights?" if owner else "New research for your category. Want insights?"
+            body = f"New research for your category just arrived. Want the key insights?" if owner else "New research for your category. Want insights?"
             template = "vera_research_digest_v2"
         elif trigger_kind == "recall_due":
-            body = f"{owner}, some customers are due for a revisit. Should I help recall them?" if owner else "Some customers are due. Want to recall them?"
+            body = f"Some customers are due for a revisit. Should I help recall them?" if owner else "Some customers are due. Want to recall them?"
             template = "vera_recall_due_v2"
         elif trigger_kind == "competitor_opened":
-            body = f"{owner}, a new competitor opened nearby. Want to see how to stay ahead?" if owner else "A new competitor opened nearby. Want to stay ahead?"
+            body = f"A new competitor opened nearby. Want to see how to stay ahead?" if owner else "A new competitor opened nearby. Want to stay ahead?"
             template = "vera_competitor_opened_v2"
         elif trigger_kind == "festival_upcoming":
-            body = f"{owner}, a festival is coming up — bookings are surging. Want to prepare?" if owner else "A festival is coming up. Want to prepare?"
+            body = f"A festival is coming up — bookings are surging. Want to prepare?" if owner else "A festival is coming up. Want to prepare?"
             template = "vera_festival_upcoming_v2"
         elif trigger_kind == "renewal_due":
-            body = f"{owner}, your subscription is expiring soon. Want to renew?" if owner else "Your subscription is expiring soon. Renew?"
+            body = f"Your subscription is expiring soon. Want to renew?" if owner else "Your subscription is expiring soon. Renew?"
             template = "vera_renewal_due_v2"
         elif trigger_kind == "regulation_change":
-            body = f"{owner}, new regulations just dropped for {cat_slug}. Want a compliance check?" if owner else f"New regulations for {cat_slug}. Want a compliance check?"
+            body = f"New regulations just dropped for {cat_slug}. Want a compliance check?" if owner else f"New regulations for {cat_slug}. Want a compliance check?"
             template = "vera_regulation_change_v2"
         elif trigger_kind == "ipl_match_today":
-            body = f"{owner}, IPL match today — expect footfall changes. Want to adjust?" if owner else "IPL match today — want to adjust your strategy?"
+            body = f"IPL match today — expect footfall changes. Want to adjust?" if owner else "IPL match today — want to adjust your strategy?"
             template = "vera_ipl_match_today_v2"
         else:
-            body = f"{owner}, ek important update hai {biz} ke liye. Dekhna chahenge?" if hindi else f"{owner}, important update for {biz}. Take a look?" if owner else f"Important update for your business. Want to see?"
+            body = f"Important update for {biz}. Take a look?" if owner else f"Important update for your business. Want to see?"
             template = f"vera_{trigger_kind}_v2"
 
         return {
@@ -504,7 +511,7 @@ async def tick(request: Request):
         if not result:
             owner = merchant.get("identity", {}).get("owner_first_name", "")
             result = {
-                "body": f"{owner}, quick update about your business. Can I share?" if owner else "Quick update about your business. Can I share?",
+                "body": f"Quick update about your business. Can I share?" if owner else "Quick update about your business. Can I share?",
                 "cta": "yes_no",
                 "send_as": "vera",
                 "suppression_key": suppression_key or f"vera:{merchant_id}:ultra",
@@ -575,7 +582,6 @@ async def handle_reply(request: Request):
     intent = detect_intent(message)
     state = get_conv_state(conv)
 
-    # State machine — exit cases
     if state == "exit_auto_reply":
         return JSONResponse({"action": "end", "rationale": "Auto-reply detected — exit"})
     if state == "exit_declined" or intent == "no":
@@ -587,8 +593,6 @@ async def handle_reply(request: Request):
             "cta": "none",
             "rationale": "Hostile signal"
         })
-
-    # Off-topic redirect
     if intent == "off_topic":
         merchant = get_ctx("merchant", merchant_id)
         owner = merchant.get("identity", {}).get("owner_first_name", "") if merchant else ""
@@ -598,8 +602,6 @@ async def handle_reply(request: Request):
             "cta": "yes_no",
             "rationale": "Off-topic redirect"
         })
-
-    # Wait signal
     if any(w in message.lower() for w in ["later", "baad mein", "abhi busy", "give me time"]):
         return JSONResponse({
             "action": "wait",
@@ -607,7 +609,6 @@ async def handle_reply(request: Request):
             "rationale": "Merchant asked for time"
         })
 
-    # Build reply
     prompt = build_reply_prompt(conv, message, intent)
     cat_slug = conv.get("category_slug", "")
     hindi = False
@@ -661,7 +662,7 @@ async def handle_reply(request: Request):
             "action": "send",
             "body": "Got it! Let me check the latest data and share a specific recommendation.",
             "cta": "open_ended",
-            "rationale": f"Fallback reply"
+            "rationale": "Fallback reply"
         })
 
 
@@ -692,13 +693,18 @@ async def metadata():
         "team_members": ["Adil"],
         "model": MODEL,
         "approach": (
-    "4-pillar Vera Edge framework: Daily Intelligence + Battlefield View + "
-    "Growth Move Engine + Revenue Radar. 8 trigger kinds with smart fallbacks. "
-    "Category voice enforcement, Hindi-English code-mix, auto-reply detection, "
-    "5-state conversation machine (qualify-action-exit). "
-    "Optimized for judge dimensions: specificity via real-number anchoring, "
-    "engagement via single-binary-CTA, category-fit via voice enforcement."
-),
+            "4-pillar Vera Edge framework: Daily Intelligence + Battlefield View + "
+            "Growth Move Engine + Revenue Radar. 8 trigger kinds with smart fallbacks. "
+            "Category voice enforcement, Hindi-English code-mix, auto-reply detection, "
+            "5-state conversation machine (qualify-action-exit). "
+            "Optimized for judge dimensions: specificity via real-number anchoring, "
+            "engagement via single-binary-CTA, category-fit via voice enforcement."
+        ),
+        "contact_email": "",
+        "version": "2.3.0",
+        "submitted_at": datetime.now(timezone.utc).isoformat()
+    })
+
 
 # ─────────────────────────────────────────────
 # OPTIONAL: POST /v1/teardown
@@ -717,9 +723,9 @@ async def teardown():
 @app.get("/")
 async def root():
     return JSONResponse({
-        "name": "Vera Edge v2.2",
+        "name": "Vera Edge v2.3",
         "description": "magicpin AI Challenge — Competition-grade merchant intelligence bot",
-        "version": "2.2.0",
+        "version": "2.3.0",
         "gaps_fixed": [
             "GAP1: Full tick schema",
             "GAP2: Reply validates action",
@@ -730,7 +736,8 @@ async def root():
             "GAP7: Category voice enforcement",
             "BONUS: Hardened fallbacks — never empty actions",
             "BONUS: Smart fallback messages per trigger kind",
-            "BONUS: Correct template naming"
+            "BONUS: Correct template naming",
+            "BONUS: Greeting stripper for higher specificity score"
         ],
         "endpoints": [
             "POST /v1/context", "POST /v1/tick", "POST /v1/reply",
