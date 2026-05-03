@@ -498,7 +498,13 @@ async def tick(request: Request):
         return JSONResponse(status_code=400, content={"error": "invalid_json"})
 
     now = body.get("now", datetime.now(timezone.utc).isoformat())
-    available_triggers = body.get("available_triggers", [])
+    available_triggers = body.get("trigger_ids", body.get("available_triggers", []))
+if not available_triggers:
+    available_triggers = [
+        key.split(":", 1)[1]
+        for key in CONTEXT_STORE.keys()
+        if key.startswith("trigger:")
+    ]
     actions = []
 
     for trigger_id in available_triggers[:20]:
