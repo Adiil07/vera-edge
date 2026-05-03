@@ -5,7 +5,7 @@ magicpin AI Challenge: Build Vera Better
 Author: Adil (MBA 2024-26, AMU)
 Model: llama-3.3-70b-versatile (Groq Free)
 
-ALL GAPS FIXED + SCORING OPTIMIZATIONS
+ALL GAPS FIXED + SCORING OPTIMIZATIONS + COLD START PROTECTION
 """
 
 import os
@@ -279,39 +279,52 @@ def compose_one(
         return result
 
     except Exception as e:
-        # SMART FALLBACK — covers ALL 8 trigger kinds with specific messages
+        # SMART FALLBACK — uses real context data for specificity even without LLM
         owner = merchant.get("identity", {}).get("owner_first_name", "")
         biz = merchant.get("identity", {}).get("name", "your business")
         trigger_kind = trigger.get("kind", "general")
         merchant_id = merchant.get("merchant_id", "")
+        
+        # Extract real numbers from context for specificity
+        ctr = merchant.get("performance", {}).get("ctr", None)
+        peer_ctr = category.get("peer_stats", {}).get("avg_ctr", None)
+        calls = merchant.get("performance", {}).get("calls", None)
+        days_left = merchant.get("subscription", {}).get("days_remaining", "a few")
 
-        # Trigger-specific fallback messages
         if trigger_kind == "performance_alert":
-            body = f"Your CTR is below peer average. Want to see how to improve?" if owner else "Your performance is below peer average. Want to improve?"
+            if ctr is not None and peer_ctr is not None:
+                body = f"CTR is {ctr} vs peer {peer_ctr}. {calls} calls this month. Want to improve?"
+            elif ctr is not None:
+                body = f"CTR is {ctr}. Want to see how to improve it?"
+            else:
+                body = f"Your performance is below peer average. Want to improve?"
             template = "vera_performance_alert_v2"
         elif trigger_kind == "research_digest":
-            body = f"New research for your category just arrived. Want the key insights?" if owner else "New research for your category. Want insights?"
+            body = f"New research for {cat_slug} just arrived. Want the key insights?" if cat_slug else "New research for your category. Want insights?"
             template = "vera_research_digest_v2"
         elif trigger_kind == "recall_due":
-            body = f"Some customers are due for a revisit. Should I help recall them?" if owner else "Some customers are due. Want to recall them?"
+            body = f"Customers are due for a revisit. Should I help recall them?"
             template = "vera_recall_due_v2"
         elif trigger_kind == "competitor_opened":
-            body = f"A new competitor opened nearby. Want to see how to stay ahead?" if owner else "A new competitor opened nearby. Want to stay ahead?"
+            body = f"A new competitor opened nearby. Want to see how to stay ahead?"
             template = "vera_competitor_opened_v2"
         elif trigger_kind == "festival_upcoming":
-            body = f"A festival is coming up — bookings are surging. Want to prepare?" if owner else "A festival is coming up. Want to prepare?"
+            body = f"A festival is coming up — bookings are surging. Want to prepare?"
             template = "vera_festival_upcoming_v2"
         elif trigger_kind == "renewal_due":
-            body = f"Your subscription is expiring soon. Want to renew?" if owner else "Your subscription is expiring soon. Renew?"
+            body = f"Subscription expires in {days_left} days. Renew now?" if days_left else "Subscription expiring soon. Renew?"
             template = "vera_renewal_due_v2"
         elif trigger_kind == "regulation_change":
-            body = f"New regulations just dropped for {cat_slug}. Want a compliance check?" if owner else f"New regulations for {cat_slug}. Want a compliance check?"
+            body = f"New regulations for {cat_slug}. Want a compliance check?" if cat_slug else "New regulations dropped. Want a compliance check?"
             template = "vera_regulation_change_v2"
         elif trigger_kind == "ipl_match_today":
-            body = f"IPL match today — expect footfall changes. Want to adjust?" if owner else "IPL match today — want to adjust your strategy?"
+            body = f"IPL match today — expect footfall changes. Want to adjust?"
             template = "vera_ipl_match_today_v2"
         else:
-            body = f"Important update for {biz}. Take a look?" if owner else f"Important update for your business. Want to see?"
+            if ctr is not None and peer_ctr is not None:
+                body = f"CTR {ctr} vs peer {peer_ctr}. Important update for {biz}. Take a look?"
+            else:
+                body = f"Important update for {biz}. Want to see?"
             template = f"vera_{trigger_kind}_v2"
 
         return {
@@ -321,7 +334,7 @@ def compose_one(
             "suppression_key": trigger.get("suppression_key", f"vera:{merchant_id}:fallback"),
             "template_name": template,
             "template_params": [owner or "there", trigger_kind, "update"],
-            "rationale": f"Fallback for {trigger_kind} — specific message, no LLM needed"
+            "rationale": f"Fallback for {trigger_kind} — specific real-data message, no LLM needed"
         }
 
 
@@ -510,14 +523,19 @@ async def tick(request: Request):
         result = compose_one(category, merchant, trigger, customer)
         if not result:
             owner = merchant.get("identity", {}).get("owner_first_name", "")
+            ctr = merchant.get("performance", {}).get("ctr", None)
+            if ctr is not None:
+                body = f"CTR is {ctr}. Quick update about your business. Can I share?"
+            else:
+                body = f"Quick update about your business. Can I share?"
             result = {
-                "body": f"Quick update about your business. Can I share?" if owner else "Quick update about your business. Can I share?",
+                "body": body[:320],
                 "cta": "yes_no",
                 "send_as": "vera",
                 "suppression_key": suppression_key or f"vera:{merchant_id}:ultra",
                 "template_name": "vera_generic_fallback",
                 "template_params": [owner or "there", "update", "..."],
-                "rationale": "Ultra fallback"
+                "rationale": "Ultra fallback with real data"
             }
 
         conv_id = f"conv_{merchant_id}_{trigger_id}_{now[:10]}"
@@ -633,7 +651,6 @@ async def handle_reply(request: Request):
 
         result = json.loads(raw)
 
-        # Harden reply
         if result.get("action") == "send" and not result.get("body"):
             result["body"] = "Understood! Let me check and get back to you."
             result["cta"] = "open_ended"
@@ -694,7 +711,7 @@ async def metadata():
         "model": MODEL,
         "approach": (
             "4-pillar Vera Edge framework: Daily Intelligence + Battlefield View + "
-            "Growth Move Engine + Revenue Radar. 8 trigger kinds with smart fallbacks. "
+            "Growth Move Engine + Revenue Radar. 8 trigger kinds with real-data smart fallbacks. "
             "Category voice enforcement, Hindi-English code-mix, auto-reply detection, "
             "5-state conversation machine (qualify-action-exit). "
             "Optimized for judge dimensions: specificity via real-number anchoring, "
@@ -735,7 +752,7 @@ async def root():
             "GAP6: Hindi-English code-mix",
             "GAP7: Category voice enforcement",
             "BONUS: Hardened fallbacks — never empty actions",
-            "BONUS: Smart fallback messages per trigger kind",
+            "BONUS: Smart fallback messages with real context data",
             "BONUS: Correct template naming",
             "BONUS: Greeting stripper for higher specificity score"
         ],
