@@ -266,12 +266,6 @@ def compose_one(
         # FORCE strip greeting prefix from body
         if result.get("body"):
             body = result["body"]
-            # Remove common greeting patterns
-            body = re.sub(r'^(Dr\.\s*\w+,?\s*)', '', body)
-            body = re.sub(r'^(Dr\.\s*\w+\s+\w+,?\s*)', '', body)
-            body = re.sub(r'^(Hi\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
-            body = re.sub(r'^(Hello\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
-            body = re.sub(r'^(Namaste\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
             body = re.sub(r'^(Dear\s+\w+,?\s*)', '', body, flags=re.IGNORECASE)
             body = re.sub(r'^(\w+\s+sir,?\s*)', '', body, flags=re.IGNORECASE)
             body = body.strip()
