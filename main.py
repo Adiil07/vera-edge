@@ -141,12 +141,19 @@ def build_compose_prompt(category, merchant, trigger, customer=None):
     sub = merchant.get("subscription", {})
     review_themes = merchant.get("review_themes", [])[:2]
 
-    trigger_payload = trigger.get("payload", {})
+    trigger_payload = trigger  # payload IS the trigger context
+    digest_text = trigger.get("digest", trigger.get("summary", ""))
+    trial_n = trigger.get("trial_n", "")
+    merchant_ctr = perf.get("ctr") or merchant.get("ctr") or ""
+    peer_ctr = (peer_stats.get("avg_ctr") or peer_stats.get("peer_median_ctr")
+                or category.get("peer_median_ctr") or merchant.get("peer_median_ctr") or "")
+    owner = owner_name or merchant.get("name") or "there"
 
     ctx = f"""
 === TRIGGER (WHY NOW) ===
 Kind: {trigger_kind} | Urgency: {trigger.get('urgency', 1)}/5
-Payload: {json.dumps(trigger_payload, ensure_ascii=False)}
+Digest/Research: {digest_text}\n
+Trial n: {trial_n}\n
 Suppression key: {trigger.get('suppression_key', '')}
 
 === MERCHANT ===
@@ -157,7 +164,7 @@ Languages: {merchant.get('identity', {}).get('languages', ['en'])}
 Subscription: {sub.get('status')} | Plan: {sub.get('plan')} | Days left: {sub.get('days_remaining', 'N/A')}
 Performance (30d): views={perf.get('views')} calls={perf.get('calls')} ctr={perf.get('ctr')} leads={perf.get('leads')}
 7d delta: views={perf.get('delta_7d', {}).get('views_pct', 0)} calls={perf.get('delta_7d', {}).get('calls_pct', 0)}
-CTR gap vs peer: merchant={perf.get('ctr')} peer_median={peer_stats.get('avg_ctr')}
+CTR: merchant={merchant_ctr}% | peer_median={peer_ctr}%\n
 Signals: {signals}
 Active offers: {json.dumps([o for o in offers if o.get('status') == 'active'], ensure_ascii=False)}
 Review themes: {json.dumps(review_themes, ensure_ascii=False)}
@@ -167,6 +174,10 @@ Peer stats: {json.dumps(peer_stats, ensure_ascii=False)}
 Offer catalog: {json.dumps(offer_catalog, ensure_ascii=False)}
 Seasonal beats: {json.dumps(seasonal, ensure_ascii=False)}
 Digest items: {json.dumps(digest_items[:3], ensure_ascii=False)}
+=== KEY NUMBERS (MUST USE IN MESSAGE) ===\n
+Merchant CTR: {merchant_ctr}% | Peer median: {peer_ctr}%\n
+Research finding: {digest_text}\n
+Owner first name: {owner}\n
 """
 
     if customer:
