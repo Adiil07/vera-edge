@@ -35,7 +35,7 @@ CONTEXT_STORE: Dict[str, Dict] = {}
 CONVERSATIONS: Dict[str, Dict] = {}
 SENT_SUPPRESSION_KEYS: set = set()
 
-client = Groq(api_key="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")
+client = Groq(api_key=os.environ.get("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", ""))
 MODEL = "llama-3.3-70b-versatile"
 
 # ─────────────────────────────────────────────
