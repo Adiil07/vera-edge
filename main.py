@@ -505,21 +505,19 @@ async def tick(request: Request):
             for key in CONTEXT_STORE.keys()
             if key.startswith("trigger:")
         ]
-    available_triggers = [
-        key.split(":", 1)[1]
-        for key in CONTEXT_STORE.keys()
-        if key.startswith("trigger:")
-    ]
     actions = []
 
     for trigger_id in available_triggers[:20]:
         trigger = get_ctx("trigger", trigger_id)
         if not trigger:
             continue
-        merchant_id = trigger.get("merchant_id")
-        customer_id = trigger.get("customer_id")
-        if not merchant_id:
+        merchant_ids_raw = trigger.get("merchant_ids", trigger.get("merchant_id", []))
+        if isinstance(merchant_ids_raw, str):
+            merchant_ids_raw = [merchant_ids_raw]
+        if not merchant_ids_raw:
             continue
+        merchant_id = merchant_ids_raw[0]
+        customer_id = trigger.get("customer_id")
         merchant = get_ctx("merchant", merchant_id)
         if not merchant:
             continue
