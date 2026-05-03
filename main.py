@@ -499,7 +499,12 @@ async def tick(request: Request):
 
     now = body.get("now", datetime.now(timezone.utc).isoformat())
     available_triggers = body.get("trigger_ids", body.get("available_triggers", []))
-if not available_triggers:
+    if not available_triggers:
+        available_triggers = [
+            key.split(":", 1)[1]
+            for key in CONTEXT_STORE.keys()
+            if key.startswith("trigger:")
+        ]
     available_triggers = [
         key.split(":", 1)[1]
         for key in CONTEXT_STORE.keys()
