@@ -83,6 +83,7 @@ You are VERA EDGE - Vera, magicpin's merchant WhatsApp AI, built to score 8+/10.
 5. ENGAGEMENT COMPULSION - Pick ONE lever per message
 
 ## HARD RULES:
+-   FIRST WORD of body must be the trigger reason or a number — never "Hi", "Hello", "Namaste"
 - NO preamble ("I hope you're doing well...")
 - NO re-introduction after first message in conversation
 - NO generic offers when specific service+price is in offer_catalog
@@ -200,17 +201,22 @@ TASK: Compose the optimal Vera Edge message for trigger kind: {trigger_kind}
 Owner to address: {owner_name}
 {send_as_instruction}
 
-Start with the trigger reason IMMEDIATELY. No preamble.
-Use REAL numbers from context only.
+CRITICAL RULES:
+- Start FIRST WORD with the trigger reason. Never greet first.
+- Use EXACT numbers from context: CTR, peer median, days left, prices.
+- Match category voice precisely. Never use taboo words.
+- End with ONE binary CTA (yes/no).
+- Max 320 characters.
+
 Return ONLY valid JSON (no markdown):
 {{
-  "body": "<message>",
-  "cta": "<open_ended|yes_no|binary_action|none>",
+  "body": "<message starting with trigger reason>",
+  "cta": "<yes_no|open_ended|none>",
   "send_as": "<vera|merchant_on_behalf>",
   "suppression_key": "{trigger.get('suppression_key', f'vera:{merchant_id}:tick')}",
   "template_name": "vera_{trigger_kind}_v2",
-  "template_params": ["{owner_name}", "<key_fact_1>", "<key_fact_2>"],
-  "rationale": "<trigger_kind + lever + expected score dimension>"
+  "template_params": ["{owner_name}", "<specific_number>", "<specific_fact>"],
+  "rationale": "<trigger_kind + lever used + expected score dimension>"
 }}
 """
 
@@ -408,7 +414,7 @@ Category: {category_slug}
 Owner: {owner}
 
 RESPONSE RULES:
-- action: Deliver promised content IMMEDIATELY. No more qualifying. Max 2 sentences + CTA.
+- action: Deliver promised content IMMEDIATELY with specific numbers. No more qualifying. Max 2 sentences + CTA. First word must be the content itself.
 - action_join: Route to signup. Send OTP or signup link.
 - qualify: Ask ONE clarifying question or add ONE piece of value.
 - exit_declined: Graceful exit. "No problem, reach out if needed :)".
@@ -686,16 +692,13 @@ async def metadata():
         "team_members": ["Adil"],
         "model": MODEL,
         "approach": (
-            "4-pillar Vera Edge framework: Daily Intelligence + Battlefield View + "
-            "Growth Move Engine + Revenue Radar. 8 trigger kinds with smart fallbacks. "
-            "Category voice enforcement, Hindi-English code-mix, auto-reply detection, "
-            "and 5-state conversation machine (qualify-action-exit)."
-        ),
-        "contact_email": "",
-        "version": "2.2.0",
-        "submitted_at": datetime.now(timezone.utc).isoformat()
-    })
-
+    "4-pillar Vera Edge framework: Daily Intelligence + Battlefield View + "
+    "Growth Move Engine + Revenue Radar. 8 trigger kinds with smart fallbacks. "
+    "Category voice enforcement, Hindi-English code-mix, auto-reply detection, "
+    "5-state conversation machine (qualify-action-exit). "
+    "Optimized for judge dimensions: specificity via real-number anchoring, "
+    "engagement via single-binary-CTA, category-fit via voice enforcement."
+),
 
 # ─────────────────────────────────────────────
 # OPTIONAL: POST /v1/teardown
